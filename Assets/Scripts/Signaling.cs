@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -16,10 +17,11 @@ public class Signaling : MonoBehaviour
     private void Awake()
     {
         _source = GetComponent<AudioSource>();
+        
     }
     private void Update()
     {
-        if(_source.volume==0  && _isEnemyExit)
+        if(_source.volume<=0.01  && _isEnemyExit)
         {
             StopCoroutine(_signalCoroutine);
             _source.Stop();
@@ -52,18 +54,18 @@ public class Signaling : MonoBehaviour
     private IEnumerator AlarmOperation()
     {
         _source.Play();
+        bool isVolumeUp=true;
         while (true)
         {
-            for (float i = 0; i < 100; i++)
-            {
-                _source.volume = 0f + (1f / 100f * i);
-                yield return null;
-            }
-            for (float i = 0; i < 100; i++)
-            {
-                _source.volume = 1f - (1f / 100f * i);
-                yield return null;
-            }
+            if (_source.volume >= 0.99f)
+                isVolumeUp = false;
+            else if (_source.volume <= 0.01f)
+                isVolumeUp = true;
+            if (isVolumeUp)
+                _source.volume = Mathf.Lerp(_source.volume, 1f, 0.05f);
+            else if (!isVolumeUp)
+                _source.volume = Mathf.Lerp(_source.volume, 0f, 0.05f);
+            yield return null;
         }
     }
 }
